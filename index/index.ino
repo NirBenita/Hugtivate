@@ -6,6 +6,7 @@
 const int sensorPin   = A0;
 int pinToLight   = 0,
     airPressure,
+    pressureToRGB,
     interval     = 300,
     high            = 0,
     low             = 600;
@@ -42,6 +43,8 @@ void autoTune() {
   if (airPressure > high) {
     high = airPressure;
   }
+  pressureToRGB = map(airPressure, low, high, 1, 255);
+  pressureToRGB = constrain(pressureToRGB, 1, 255);
   airPressure = map(airPressure, low, high, 1, 200);
   airPressure = constrain(airPressure, 1, 200);
 }
@@ -50,9 +53,10 @@ void blinkAndStep() {
    if (pinToLight > NUM_LEDS){
     pinToLight=0;
   };
-  leds[pinToLight].setRGB(96, 44, 113);
+  leds[pinToLight].setRGB(pressureToRGB, 68, 255/pressureToRGB);;
   FastLED.show();
   leds[pinToLight] = CRGB::Black;
   FastLED.show();
   pinToLight++;
 }
+
