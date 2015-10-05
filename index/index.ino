@@ -7,7 +7,7 @@ const int sensorPin   = A0; // The pin to which the sensor is connected
 int ledToLight   = 0, // The specific LED from within the array
     airPressure, // The current state of the pressure in our system
     pressureToRGB, // A representation of airPressure between 1-255
-    interval     = 300, // The speed at which we animate
+    interval     = 500, // The speed at which we animate
     high            = 0, // Maximum air pressure
     low             = 600; // Static air pressure
 long lastMillis  = 0; // The last time we called blinkAndStep()
@@ -38,17 +38,16 @@ void autoTune() {
   if (airPressure > high) {
     high = airPressure;
   }
-  pressureToRGB = map(airPressure, low, high, 1, 255);
-  pressureToRGB = constrain(pressureToRGB, 1, 255);
-  airPressure = map(airPressure, low, high, 1, 200);
-  airPressure = constrain(airPressure, 1, 200);
+
+  airPressure = map(airPressure, low, high, 1, 255);
+  airPressure = constrain(airPressure, 1, 255);
 }
 // Blink an LED, and set the position of the next LED to light
 void blinkAndStep() {
    if (ledToLight > NUM_LEDS){
     ledToLight=0;
   };
-  leds[ledToLight].setRGB(pressureToRGB, 68, 255/pressureToRGB);;
+  leds[ledToLight].setRGB(airPressure, 68, 255/airPressure);;
   FastLED.show();
   leds[ledToLight] = CRGB::Black;
   FastLED.show();
