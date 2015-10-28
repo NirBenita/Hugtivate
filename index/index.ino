@@ -8,8 +8,8 @@ int ledToLight   = 0, // The specific LED from within the array
     airPressure, // The current state of the pressure in our system
     pressureToRGB, // A representation of airPressure between 1-255
     interval     = 500, // The speed at which we animate
-    high            = 0, // Maximum air pressure
-    low             = 600; // Static air pressure
+    high            = 0,    // Initiate spectrum ends
+    low             = 600; // 
 long lastMillis  = 0; // The last time we called blinkAndStep()
 
 // Constructor functions
@@ -38,7 +38,6 @@ void autoTune() {
   if (airPressure > high) {
     high = airPressure;
   }
-
   airPressure = map(airPressure, low, high, 1, 255);
   airPressure = constrain(airPressure, 1, 255);
 }
@@ -53,3 +52,4 @@ void blinkAndStep() {
   FastLED.show();
   ledToLight++;
 }
+
