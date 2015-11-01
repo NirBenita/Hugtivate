@@ -10,15 +10,15 @@ int ledToLight      = 0,   // The specific LED from within the array
     maxMessured     = 0,   // Initiate spectrum ends
     minMessured     = 600, // 
     prevAirPressure = 0,
-    hugStartTime,
-    superHugEndTime;
+    isHugging       = false,
+    superHugStartTime,
+    superHugReactionDuration = 2000,
+    superHugDuration = 2000,
+    maxSpectrum     = 255,
+    minSpectrum     = 1;
 
-const int superHugReactionDuration = 2000,
-          superHugDuration = 5000,
-          maxSpectrum     = 255,
-          minSpectrum     = 1;
-
-long lastMillis     = 0; // The last time we called blinkAndStep()
+long  lastMillis     = 0, // The last time we called blinkAndStep()
+      superHugEndTime= 0; 
 
 // Constructor functions
 CRGB leds[NUM_LEDS];
@@ -34,11 +34,23 @@ void loop() {
   airPressure = analogRead(sensorPin); // First read
   autoTune();
   if (prevAirPressure < maxSpectrum/2 && airPressure > maxSpectrum/2) {
-    hugStartTime = millis();
+    superHugStartTime = millis();
+    isHugging = true; // This makes sure the long hug is consistant
+  }; 
+  if(airPressure < maxSpectrum/2){isHugging = false;};
+
+  if (millis()-superHugStartTime > superHugDuration && isHugging) {
+    superHugEndTime = millis() + superHugReactionDuration;
   }
-  if (millis()-hugStartTime > superHugDuration) {
-    lightEmUp();
-  }
+
+  if (millis() - lastMillis > interval/airPressure){
+    if(superHugEndTime - millis() > 0) {
+      lightEmUp();
+    } else {
+      blinkAndStep();
+    }
+    lastMillis = millis();
+  }  
 }
 
 // Determine the spectrum of air pressure
@@ -54,9 +66,10 @@ void autoTune() {
 }
 // Blink an LED, and set the position of the next LED to light
 void blinkAndStep() {
-   if (ledToLight > NUM_LEDS){
-    ledToLight=0;
-    };
+  for(int i=0; i<NUM_LEDS; i++){
+    leds[i] = CRGB::Black;
+  };
+  if(ledToLight > NUM_LEDS){ledToLight=0;};
   leds[ledToLight].setRGB(airPressure, 68, 255/airPressure);;
   FastLED.show();
   leds[ledToLight] = CRGB::Black;
@@ -64,10 +77,12 @@ void blinkAndStep() {
   ledToLight++;
 }
 
+
 void lightEmUp() {
-  leds[0].setRGB(20,234,13);
+  for(int i=0; i<NUM_LEDS; i++){
+    leds[i] = CRGB::Purple;
+  };
   FastLED.show();
-  superHugEndTime = millis()+ superHugReactionDuration;
 }
 
-        
+    
