@@ -4,18 +4,19 @@
 #define STRIP    6 // The pin to which the strip is connected
 const int sensorPin   = A0; // The pin to which the sensor is connected
 
-int ledToLight      = 0, // The specific LED from within the array
-    airPressure     = 0, // The current state of the pressure in our system
-    pressureToRGB, // A representation of airPressure between 1-255
+int ledToLight      = 0,   // The specific LED from within the array
+    airPressure     = 0,   // The current state of the pressure in our system
     interval        = 500, // The speed at which we animate
-    maxMessured     = 0,    // Initiate spectrum ends
+    maxMessured     = 0,   // Initiate spectrum ends
     minMessured     = 600, // 
-    maxSpectrum     = 255,
-    minSpectrum     = 1,
     prevAirPressure = 0,
-    isHugging       = false,
-    superHugDuration= 5000,
-    hugStartTime;
+    hugStartTime,
+    superHugEndTime;
+
+const int superHugReactionDuration = 2000,
+          superHugDuration = 5000,
+          maxSpectrum     = 255,
+          minSpectrum     = 1;
 
 long lastMillis     = 0; // The last time we called blinkAndStep()
 
@@ -34,11 +35,8 @@ void loop() {
   autoTune();
   if (prevAirPressure < maxSpectrum/2 && airPressure > maxSpectrum/2) {
     hugStartTime = millis();
-    isHugging = true;
-  } else if (airPressure < maxSpectrum/2) {
-    isHugging = false;
   }
-  if (millis()-hugStartTime > superHugDuration && isHugging) {
+  if (millis()-hugStartTime > superHugDuration) {
     lightEmUp();
   }
 }
@@ -66,19 +64,10 @@ void blinkAndStep() {
   ledToLight++;
 }
 
-/*
-  airPressure was low, now high?
-    save start time
-    stillOn = true
-    pressure high?
-      millis()-startTime > X?
-        callback
-
-*/
-
 void lightEmUp() {
   leds[0].setRGB(20,234,13);
   FastLED.show();
+  superHugEndTime = millis()+ superHugReactionDuration;
 }
 
         
