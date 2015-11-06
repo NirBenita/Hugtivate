@@ -6,6 +6,7 @@ const int sensorPin   = A0; // The pin to which the sensor is connected
 
 int ledToLight      = 0,   // The specific LED from within the array
     airPressure     = 0,   // The current state of the pressure in our system
+    airPressureRGB,
     interval        = 500, // The speed at which we animate
     maxSpectrum     = 1000,
     minSpectrum     = 1,
@@ -13,10 +14,11 @@ int ledToLight      = 0,   // The specific LED from within the array
     minMessured     = maxSpectrum, // 
     prevAirPressure = 0,
     isHugging       = false,
-    superHugReactionDuration = 2000,
-    superHugDuration = 2000;
+    superHugReactionDuration = 5000,
+    superHugDuration = 5000;
 
-long  lastMillis        = 0, // The last time we called blinkAndStep()
+long  curTime = 0,
+      lastMillis        = 0, // The last time we called blinkAndStep()
       superHugEndTime   = 0,
       hugStartTime = 1; 
 
@@ -30,13 +32,13 @@ void setup() {
 }
  
 void loop() {
-
+  curTime = millis();
   prevAirPressure = airPressure;
   airPressure = analogRead(sensorPin);
   autoTune();
 
   if (prevAirPressure < maxSpectrum*0.65 && airPressure > maxSpectrum*0.65 && isHugging==false) {
-    hugStartTime = millis();
+    hugStartTime = curTime;
     isHugging = true;
     
   };
@@ -45,17 +47,20 @@ void loop() {
     isHugging = false;
   };
 
-  if (millis()-hugStartTime > superHugDuration && isHugging) {
-    superHugEndTime = millis() + superHugReactionDuration;
-    Serial.println("Just SUPER hugged!"); 
+  if (curTime-hugStartTime > superHugDuration && isHugging) {
+    superHugEndTime = curTime + superHugReactionDuration;
   }
-  if (millis() - lastMillis > interval/airPressure){
-    if(superHugEndTime - millis() > 0) {
+
+  if (curTime - lastMillis > interval/airPressureRGB){
+    Serial.println(superHugEndTime - curTime);
+    if(superHugEndTime - curTime > 0) {
       lightEmUp();
+      Serial.println("Super Hugging");
     } else {
       blinkAndStep();
+      Serial.println("Default");
     }
-    lastMillis = millis();
+    lastMillis = curTime;
   }  
 }
 
@@ -66,6 +71,8 @@ void autoTune() {
   } else if (airPressure > maxMessured) {
     maxMessured = airPressure;
   }
+  airPressureRGB = map(airPressure, minMessured, maxMessured, 1, 255);
+  airPressureRGB = map(airPressure, minMessured, maxMessured, 1, 255);
   airPressure = map(airPressure, minMessured, maxMessured, minSpectrum, maxSpectrum);
   airPressure = constrain(airPressure, minSpectrum, maxSpectrum);
 }
@@ -75,7 +82,7 @@ void blinkAndStep() {
     leds[i] = CRGB::Black;
   };
   if(ledToLight > NUM_LEDS){ledToLight=0;};
-  leds[ledToLight].setRGB(airPressure, 68, 255/airPressure);;
+  leds[ledToLight].setRGB(airPressureRGB, 68, 255/airPressureRGB);
   FastLED.show();
   leds[ledToLight] = CRGB::Black;
   FastLED.show();
@@ -84,7 +91,8 @@ void blinkAndStep() {
 
 void lightEmUp() {
   for(int i=0; i<NUM_LEDS; i++){
-    leds[i] = CRGB::Purple;
+    leds[i].setRGB(7*i, 68, 255/i);
   };
+
   FastLED.show();
 }
