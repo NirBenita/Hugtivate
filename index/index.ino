@@ -7,18 +7,18 @@ const int sensorPin   = A0; // The pin to which the sensor is connected
 int ledToLight      = 0,   // The specific LED from within the array
     airPressure     = 0,   // The current state of the pressure in our system
     interval        = 500, // The speed at which we animate
-    maxMessured     = 0,   // Initiate spectrum ends
-    minMessured     = 600, // 
+    maxSpectrum     = 1000,
+    minSpectrum     = 1,
+    maxMessured     = 1,   // Initiate spectrum ends
+    minMessured     = maxSpectrum, // 
     prevAirPressure = 0,
     isHugging       = false,
-    superHugStartTime,
     superHugReactionDuration = 2000,
-    superHugDuration = 2000,
-    maxSpectrum     = 255,
-    minSpectrum     = 1;
+    superHugDuration = 2000;
 
-long  lastMillis     = 0, // The last time we called blinkAndStep()
-      superHugEndTime= 0; 
+long  lastMillis        = 0, // The last time we called blinkAndStep()
+      superHugEndTime   = 0,
+      hugStartTime = 1; 
 
 // Constructor functions
 CRGB leds[NUM_LEDS];
@@ -30,19 +30,25 @@ void setup() {
 }
  
 void loop() {
+
   prevAirPressure = airPressure;
-  airPressure = analogRead(sensorPin); // First read
+  airPressure = analogRead(sensorPin);
   autoTune();
-  if (prevAirPressure < maxSpectrum/2 && airPressure > maxSpectrum/2) {
-    superHugStartTime = millis();
-    isHugging = true; // This makes sure the long hug is consistant
-  }; 
-  if(airPressure < maxSpectrum/2){isHugging = false;};
 
-  if (millis()-superHugStartTime > superHugDuration && isHugging) {
+  if (prevAirPressure < maxSpectrum*0.65 && airPressure > maxSpectrum*0.65 && isHugging==false) {
+    hugStartTime = millis();
+    isHugging = true;
+    
+  };
+
+  if(airPressure < maxSpectrum/2 && isHugging==true ){
+    isHugging = false;
+  };
+
+  if (millis()-hugStartTime > superHugDuration && isHugging) {
     superHugEndTime = millis() + superHugReactionDuration;
+    Serial.println("Just SUPER hugged!"); 
   }
-
   if (millis() - lastMillis > interval/airPressure){
     if(superHugEndTime - millis() > 0) {
       lightEmUp();
@@ -57,8 +63,7 @@ void loop() {
 void autoTune() {
   if (airPressure < minMessured) {
     minMessured = airPressure;
-  }
-  if (airPressure > maxMessured) {
+  } else if (airPressure > maxMessured) {
     maxMessured = airPressure;
   }
   airPressure = map(airPressure, minMessured, maxMessured, minSpectrum, maxSpectrum);
@@ -77,12 +82,9 @@ void blinkAndStep() {
   ledToLight++;
 }
 
-
 void lightEmUp() {
   for(int i=0; i<NUM_LEDS; i++){
     leds[i] = CRGB::Purple;
   };
   FastLED.show();
 }
-
-    
